@@ -17,5 +17,5 @@ if __name__ == "__main__":
         sys.exit()
 
     port = os.environ.get('MATTERMOST_GIPHY_PORT', None) or os.environ.get('PORT', 5000)
-    host = os.environ.get('MATTERMOST_GIPHY_HOST', None) or os.environ.get('HOST', '0.0.0.0')
+    host = os.environ.get('MATTERMOST_GIPHY_HOST', None) or os.environ.get('HOST', 'localhost')
     app.run(host=str(host), port=int(port))

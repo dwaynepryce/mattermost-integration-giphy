@@ -3,3 +3,9 @@
 #Byte-compile / optimized  files
 __pycache__/
 *.py[cod]
+*.iml
+.idea
+venv
+build
+dist
+mattermost_giphy.egg-info

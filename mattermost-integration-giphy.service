@@ -1,0 +1,18 @@
+[Unit]
+Description=Mattermost-Giphy
+After=network.target
+After=mattermost.service
+Requires=mattermost.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'source env.sh && venv/bin/python run.py'
+TimeoutStartSec=3600
+Restart=always
+RestartSec=10
+WorkingDirectory=/opt/mattermost-integration-giphy
+User=mattermost
+Group=mattermost
+
+[Install]
+WantedBy=multi-user-target.service

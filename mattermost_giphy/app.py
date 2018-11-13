@@ -4,12 +4,8 @@ import logging
 import random
 import re
 
-try:
-    from urllib.parse import urlsplit
-    from urllib.parse import urlunsplit
-except ImportError:
-    from urlparse import urlsplit
-    from urlparse import urlunsplit
+from urllib.parse import urlsplit
+from urllib.parse import urlunsplit
 
 import requests
 from flask import Flask
@@ -30,7 +26,6 @@ def root():
     """
     Home handler
     """
-
     return "OK"
 
 
@@ -39,12 +34,10 @@ def new_post():
     """
     Mattermost new post event handler
     """
+    resp_data = {'username': USERNAME, 'icon_url': ICON_URL}
     try:
         # NOTE: common stuff
         slash_command = False
-        resp_data = {}
-        resp_data['username'] = USERNAME
-        resp_data['icon_url'] = ICON_URL
 
         data = request.form
 
@@ -52,7 +45,8 @@ def new_post():
             raise Exception('Missing necessary token in the post data')
 
         if data['token'] not in MATTERMOST_GIPHY_TOKEN:
-            raise Exception('Tokens did not match, it is possible that this request came from somewhere other than Mattermost')
+            raise Exception('Tokens did not match, it is possible that this request came from somewhere other than ' +
+                            'Mattermost')
 
         # NOTE: support the slash command
         if 'command' in data:
@@ -73,8 +67,8 @@ def new_post():
         resp_data['text'] = '''`{}` searched for {}
     {}'''.format(data.get('user_name', 'unknown').title(), translate_text, gif_url)
     except Exception as err:
-        msg = err.message
-        logging.error('unable to handle new post :: {}'.format(msg))
+        msg = "An error has occurred on the giphy bot server."
+        logging.error(f'unable to handle new post :: {msg}')
         resp_data['text'] = msg
     finally:
         resp = Response(content_type='application/json')
@@ -86,16 +80,13 @@ def giphy_translate(text):
     """
     Giphy translate method, uses the Giphy API to find an appropriate gif url
     """
+    params = {'s': text, 'rating': RATING, 'api_key': GIPHY_API_KEY}
     try:
-        params = {}
-        params['s'] = text
-        params['rating'] = RATING
-        params['api_key'] = GIPHY_API_KEY
-
-        resp = requests.get('{}://api.giphy.com/v1/gifs/translate'.format(SCHEME), params=params, verify=True)
+        resp = requests.get(f'{SCHEME}://api.giphy.com/v1/gifs/translate', params=params, verify=True)
 
         if resp.status_code is not requests.codes.ok:
-            logging.error('Encountered error using Giphy API, text=%s, status=%d, response_body=%s' % (text, resp.status_code, resp.json()))
+            logging.error(f'Encountered error using Giphy API, text={text}, " + '
+                          f'"status={resp.status_code}, response_body={resp.json()}')
             return None
 
         resp_data = resp.json()
@@ -105,7 +96,7 @@ def giphy_translate(text):
 
         return urlunsplit(url)
     except Exception as err:
-        logging.error('unable to translate giphy :: {}'.format(err))
+        logging.error(f'unable to translate giphy :: {err}')
         return None
 
 
@@ -114,7 +105,7 @@ def translate(text):
     Search for a #Command with format '#Command <text>'.  If there is one, process the command.  If not, search giphy
     """
     match = re.match(r'\#(\w+)\s+((?:\w|\s)+)', text, flags=0)
-    return giphy_translate(text) if match is None else process_command(match.group(1),match.group(2))
+    return giphy_translate(text) if match is None else process_command(match.group(1), match.group(2))
 
 
 def process_command(command, text):
@@ -138,4 +129,4 @@ def process_command(command, text):
                                                              'Clueless',
                                                              'Shrug']))
     }
-    return transforms[command.lower()](text) if command.lower() in transforms else giphy_translate("#{} {}".format(command, text))
+    return transforms[command.lower()](text) if command.lower() in transforms else giphy_translate(f"#{command} {text}")
